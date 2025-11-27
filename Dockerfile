@@ -14,19 +14,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Install CPU-only PyTorch first to keep the image small
 COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip && \
-	pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu \
-	torch==2.1.0+cpu torchvision==0.16.0+cpu && \
-	# Install opencv-python-headless first to prevent ultralytics from installing opencv-python
-	pip install --no-cache-dir opencv-python-headless==4.10.0.84 && \
-	pip install --no-cache-dir -r requirements.txt && \
-	# Ensure numpy < 2.0 (compatibility with PyTorch/ultralytics)
-	pip install --no-cache-dir "numpy<2.0,>=1.26.4" && \
-	# Ensure opencv-python is not installed (it requires libGL) and reinstall headless version
-	pip uninstall -y opencv-python 2>/dev/null || true && \
-	pip install --no-cache-dir --force-reinstall opencv-python-headless==4.10.0.84 && \
-	# Verify cv2 and numpy versions
-	python -c "import cv2; import numpy as np; print(f'OpenCV: {cv2.__version__}, NumPy: {np.__version__}')"
+RUN pip install --no-cache-dir --upgrade pip \
+ && pip install --no-cache-dir numpy==1.26.4 \
+ && pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu torch==2.1.0+cpu torchvision==0.16.0+cpu \
+ && pip install --no-cache-dir opencv-python-headless==4.10.0.84 \
+ && pip install --no-cache-dir -r requirements.txt \
+ && pip install --no-cache-dir --force-reinstall --no-deps numpy==1.26.4 \
+ && pip uninstall -y opencv-python 2>/dev/null || true \
+ && pip install --no-cache-dir --force-reinstall opencv-python-headless==4.10.0.84 \
+ && python -c "import cv2, numpy as np; print(f'OpenCV: {cv2.__version__}, NumPy: {np.__version__}')"
 
 # Copy app and weights
 COPY . .

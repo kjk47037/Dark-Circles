@@ -84,6 +84,20 @@ try:
 except Exception as _e:
 	print(f"⚠️ Warning: C3k2 alias patch failed: {_e}")
 
+try:
+    from ultralytics.nn.modules import block as ul_block
+    import sys
+    if not hasattr(ul_block, "C3k2") and hasattr(ul_block, "C3"):
+        ul_block.C3k2 = ul_block.C3
+        sys.modules["ultralytics.nn.modules.block"].C3k2 = ul_block.C3
+        print("⚠️ C3k2 not found, aliasing to C3 for compatibility")
+    if not hasattr(ul_block, "C3k") and hasattr(ul_block, "C3"):
+        ul_block.C3k = ul_block.C3
+        sys.modules["ultralytics.nn.modules.block"].C3k = ul_block.C3
+        print("⚠️ C3k not found, aliasing to C3 for compatibility")
+except Exception as _e:
+    print(f"⚠️ Warning: C3 compatibility patch failed: {_e}")
+
 # Patch torch.load to handle older model formats
 import torch.serialization
 _original_torch_load = torch.load
