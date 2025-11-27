@@ -18,10 +18,10 @@ RUN pip install --no-cache-dir --upgrade pip && \
 COPY . .
 
 # Make startup script executable
-RUN chmod +x start.sh
+RUN chmod +x start.py
 
 EXPOSE 8000
-# Use startup script to handle PORT environment variable
-CMD ["./start.sh"]
+# Use Python startup script to handle PORT environment variable
+CMD ["python", "start.py"]
 
 

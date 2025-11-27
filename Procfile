@@ -1,3 +1,3 @@
-web: ./start.sh
+web: python start.py
 
 
