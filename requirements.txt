@@ -1,5 +1,5 @@
 fastapi==0.115.5
-numpy<2.0,>=1.26.4
+numpy==1.26.4
 Pillow==10.4.0
 pydantic==2.12.5
 requests==2.32.3

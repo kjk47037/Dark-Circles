@@ -62,6 +62,28 @@ app.add_middleware(
 )
 
 # -------------- Load Models (once) --------------
+# Handle older checkpoints that reference 'C3k2' (provide alias before loading weights)
+try:
+	from ultralytics.nn.modules import block as ul_block
+	import sys
+	if not hasattr(ul_block, "C3k2"):
+		if hasattr(ul_block, "C3"):
+			ul_block.C3k2 = ul_block.C3
+			sys.modules["ultralytics.nn.modules.block"].C3k2 = ul_block.C3
+			print("⚠️ C3k2 not found, aliasing to C3 for compatibility")
+		else:
+			import torch.nn as nn
+			class C3k2(nn.Module):
+				def __init__(self, *args, **kwargs):
+					super().__init__()
+				def forward(self, x):
+					return x
+			ul_block.C3k2 = C3k2
+			sys.modules["ultralytics.nn.modules.block"].C3k2 = C3k2
+			print("⚠️ C3k2 not found, using minimal stub (model may degrade)")
+except Exception as _e:
+	print(f"⚠️ Warning: C3k2 alias patch failed: {_e}")
+
 # Patch torch.load to handle older model formats
 import torch.serialization
 _original_torch_load = torch.load
