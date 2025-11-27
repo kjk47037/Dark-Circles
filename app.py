@@ -62,17 +62,43 @@ app.add_middleware(
 )
 
 # -------------- Load Models (once) --------------
+# Patch torch.load to handle older model formats
+import torch.serialization
+_original_torch_load = torch.load
+
+def _patched_torch_load(*args, **kwargs):
+    """Patched torch.load to handle older ultralytics model formats"""
+    # Set weights_only=False for PyTorch 2.6+ compatibility
+    kwargs.setdefault('weights_only', False)
+    return _original_torch_load(*args, **kwargs)
+
+torch.load = _patched_torch_load
+
 try:
     acne_model = YOLO(ACNE_WEIGHTS)
     print(f"✅ Acne model loaded successfully from {ACNE_WEIGHTS}")
 except Exception as e:
-    raise RuntimeError(f"Failed to load acne model from {ACNE_WEIGHTS}: {e}")
+    # Try loading with explicit weights_only=False
+    import warnings
+    warnings.filterwarnings('ignore', category=UserWarning)
+    try:
+        acne_model = YOLO(ACNE_WEIGHTS)
+        print(f"✅ Acne model loaded successfully from {ACNE_WEIGHTS}")
+    except Exception as e2:
+        raise RuntimeError(f"Failed to load acne model from {ACNE_WEIGHTS}: {e2}") from e2
 
 try:
     dc_model = YOLO(DC_WEIGHTS)
     print(f"✅ Dark circles model loaded successfully from {DC_WEIGHTS}")
 except Exception as e:
-    raise RuntimeError(f"Failed to load dark_circles model from {DC_WEIGHTS}: {e}")
+    # Try loading with explicit weights_only=False
+    import warnings
+    warnings.filterwarnings('ignore', category=UserWarning)
+    try:
+        dc_model = YOLO(DC_WEIGHTS)
+        print(f"✅ Dark circles model loaded successfully from {DC_WEIGHTS}")
+    except Exception as e2:
+        raise RuntimeError(f"Failed to load dark_circles model from {DC_WEIGHTS}: {e2}") from e2
 
 
 # -------------- Pydantic Schemas --------------

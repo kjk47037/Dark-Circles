@@ -1,11 +1,12 @@
 fastapi==0.115.5
-numpy==1.26.4
+numpy<2.0,>=1.26.4
 Pillow==10.4.0
 pydantic==2.12.5
 requests==2.32.3
 # Install opencv-python-headless BEFORE ultralytics to prevent it from installing opencv-python
 opencv-python-headless==4.10.0.84
-ultralytics==8.2.103
+# Try older version for compatibility with models trained on older ultralytics
+ultralytics==8.0.196
 uvicorn[standard]==0.30.6
 matplotlib==3.9.2
 python-multipart==0.0.9

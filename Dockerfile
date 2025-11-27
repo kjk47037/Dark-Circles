@@ -20,11 +20,13 @@ RUN pip install --no-cache-dir --upgrade pip && \
 	# Install opencv-python-headless first to prevent ultralytics from installing opencv-python
 	pip install --no-cache-dir opencv-python-headless==4.10.0.84 && \
 	pip install --no-cache-dir -r requirements.txt && \
+	# Ensure numpy < 2.0 (compatibility with PyTorch/ultralytics)
+	pip install --no-cache-dir "numpy<2.0,>=1.26.4" && \
 	# Ensure opencv-python is not installed (it requires libGL) and reinstall headless version
 	pip uninstall -y opencv-python 2>/dev/null || true && \
 	pip install --no-cache-dir --force-reinstall opencv-python-headless==4.10.0.84 && \
-	# Verify cv2 is importable
-	python -c "import cv2; print(f'OpenCV version: {cv2.__version__}')"
+	# Verify cv2 and numpy versions
+	python -c "import cv2; import numpy as np; print(f'OpenCV: {cv2.__version__}, NumPy: {np.__version__}')"
 
 # Copy app and weights
 COPY . .
