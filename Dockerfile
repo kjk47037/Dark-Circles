@@ -21,8 +21,9 @@ RUN pip install --no-cache-dir --upgrade pip \
  && pip install --no-cache-dir -r requirements.txt \
  && pip install --no-cache-dir --force-reinstall --no-deps numpy==2.1.2 \
  && pip uninstall -y opencv-python 2>/dev/null || true \
- && pip install --no-cache-dir --force-reinstall opencv-python-headless==4.12.0.88 \
- && python -c "import cv2, numpy as np; assert np.__version__.startswith('2.1'), f'NumPy version mismatch: {np.__version__}'; print(f'✓ OpenCV: {cv2.__version__}, NumPy: {np.__version__}')"
+ && pip install --no-cache-dir --force-reinstall --no-deps opencv-python-headless==4.12.0.88 \
+ && python -c "import cv2, numpy as np; assert np.__version__.startswith('2.1'), f'NumPy version mismatch: {np.__version__}'; print(f'✓ OpenCV: {cv2.__version__}, NumPy: {np.__version__}')" \
+ && python -c "import cv2; print(f'✓ OpenCV headless installed: {cv2.__version__}')"
 
 # Copy app and weights
 COPY . .
