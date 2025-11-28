@@ -504,11 +504,27 @@ async def predict_combined(
 	except Exception:
 		pass
 
+	# If UploadFile is provided, convert to base64 once (UploadFile can only be read once)
+	if image and not image_b64:
+		if not image.content_type or not image.content_type.startswith("image/"):
+			raise HTTPException(status_code=400, detail="Please upload a valid image file.")
+		# Read file content once
+		file_content = await image.read()
+		# Convert to base64
+		import base64
+		b64_data = base64.b64encode(file_content).decode("utf-8")
+		# Determine MIME type
+		mime_type = image.content_type or "image/png"
+		image_b64 = f"data:{mime_type};base64,{b64_data}"
+		# Clear image_file so we use base64 for both calls
+		image = None
+
+	# Now use base64 for both predictions (can be reused)
 	acne_res = await predict_skin_condition(
 		model=acne_model,
 		model_name="acne",
 		image_b64=image_b64,
-		image_file=image,
+		image_file=None,  # Use None since we're using base64
 		output_dir=ACNE_OUT_DIR,
 		confidence=ACNE_CONF,
 		use_custom_annotation=True
@@ -517,8 +533,8 @@ async def predict_combined(
 	dc_res = await predict_skin_condition(
 		model=dc_model,
 		model_name="dark_circles",
-		image_b64=image_b64,
-		image_file=image,
+		image_b64=image_b64,  # Reuse the same base64
+		image_file=None,  # Use None since we're using base64
 		output_dir=DC_OUT_DIR,
 		confidence=DC_CONF,
 		use_custom_annotation=False
