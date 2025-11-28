@@ -62,41 +62,29 @@ app.add_middleware(
 )
 
 # -------------- Load Models (once) --------------
-# Handle older checkpoints that reference 'C3k2' (provide alias before loading weights)
-try:
-	from ultralytics.nn.modules import block as ul_block
-	import sys
-	if not hasattr(ul_block, "C3k2"):
-		if hasattr(ul_block, "C3"):
-			ul_block.C3k2 = ul_block.C3
-			sys.modules["ultralytics.nn.modules.block"].C3k2 = ul_block.C3
-			print("⚠️ C3k2 not found, aliasing to C3 for compatibility")
-		else:
-			import torch.nn as nn
-			class C3k2(nn.Module):
-				def __init__(self, *args, **kwargs):
-					super().__init__()
-				def forward(self, x):
-					return x
-			ul_block.C3k2 = C3k2
-			sys.modules["ultralytics.nn.modules.block"].C3k2 = C3k2
-			print("⚠️ C3k2 not found, using minimal stub (model may degrade)")
-except Exception as _e:
-	print(f"⚠️ Warning: C3k2 alias patch failed: {_e}")
-
+# Handle older checkpoints that reference missing modules (provide aliases before loading weights)
 try:
     from ultralytics.nn.modules import block as ul_block
     import sys
-    if not hasattr(ul_block, "C3k2") and hasattr(ul_block, "C3"):
-        ul_block.C3k2 = ul_block.C3
-        sys.modules["ultralytics.nn.modules.block"].C3k2 = ul_block.C3
-        print("⚠️ C3k2 not found, aliasing to C3 for compatibility")
-    if not hasattr(ul_block, "C3k") and hasattr(ul_block, "C3"):
-        ul_block.C3k = ul_block.C3
-        sys.modules["ultralytics.nn.modules.block"].C3k = ul_block.C3
-        print("⚠️ C3k not found, aliasing to C3 for compatibility")
-except Exception as _e:
-    print(f"⚠️ Warning: C3 compatibility patch failed: {_e}")
+    
+    # Create aliases for missing modules to C3 (or C2f if available)
+    fallback_class = None
+    if hasattr(ul_block, "C2f"):
+        fallback_class = ul_block.C2f
+    elif hasattr(ul_block, "C3"):
+        fallback_class = ul_block.C3
+    
+    if fallback_class:
+        missing_modules = ["C3k2", "C3k", "C2PSA"]
+        for module_name in missing_modules:
+            if not hasattr(ul_block, module_name):
+                setattr(ul_block, module_name, fallback_class)
+                setattr(sys.modules["ultralytics.nn.modules.block"], module_name, fallback_class)
+                print(f"⚠️ {module_name} not found, aliasing to {fallback_class.__name__} for compatibility")
+    else:
+        print("⚠️ Warning: No suitable fallback class found for missing modules")
+except Exception as e:
+    print(f"⚠️ Warning: Module compatibility patch failed: {e}")
 
 # Patch torch.load to handle older model formats
 import torch.serialization

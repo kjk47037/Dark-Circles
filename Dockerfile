@@ -12,17 +12,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	libgomp1 \
 	&& rm -rf /var/lib/apt/lists/*
 
-# Install CPU-only PyTorch first to keep the image small
+# Install CPU-only PyTorch (2.5+ supports NumPy 2.x) to match training environment
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip \
- && pip install --no-cache-dir numpy==1.26.4 \
- && pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu torch==2.1.0+cpu torchvision==0.16.0+cpu \
- && pip install --no-cache-dir opencv-python-headless==4.10.0.84 \
+ && pip install --no-cache-dir numpy==2.1.2 \
+ && pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu torch==2.5.1+cpu torchvision==0.20.1+cpu \
+ && pip install --no-cache-dir opencv-python-headless==4.12.0.88 \
  && pip install --no-cache-dir -r requirements.txt \
- && pip install --no-cache-dir --force-reinstall --no-deps numpy==1.26.4 \
+ && pip install --no-cache-dir --force-reinstall --no-deps numpy==2.1.2 \
  && pip uninstall -y opencv-python 2>/dev/null || true \
- && pip install --no-cache-dir --force-reinstall opencv-python-headless==4.10.0.84 \
- && python -c "import cv2, numpy as np; print(f'OpenCV: {cv2.__version__}, NumPy: {np.__version__}')"
+ && pip install --no-cache-dir --force-reinstall opencv-python-headless==4.12.0.88 \
+ && python -c "import cv2, numpy as np; assert np.__version__.startswith('2.1'), f'NumPy version mismatch: {np.__version__}'; print(f'✓ OpenCV: {cv2.__version__}, NumPy: {np.__version__}')"
 
 # Copy app and weights
 COPY . .
